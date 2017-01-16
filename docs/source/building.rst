@@ -73,3 +73,65 @@ It is possible to customize the build process by passing appropriate flags to
 #. ``-DBUILD_TESTING=OFF``: Use this flag to enable or disable building the unit tests. By default, this option is enabled.
 
 #. ``-DBUILD_DOCUMENTATION=ON``: Turn this flag to ``ON`` to build the documentation with Theia. This option is disabled by default.
+
+.. _section-docker:
+
+Using a Docker Container
+--------
+
+Building and reconstruction can be performed utilizing a Docker container.  You can install docker on a variety of platforms such as Linux, Windows, Mac, Azure, AWS or a Windows Server.  This has only been testing using the Linux distribution of Docker, but the other platforms may work as well.
+
+First, install Docker, and create a dockerfile like the following:
+
+.. code-block:: bash
+
+ FROM debian:jessie
+ RUN apt-get update
+ 
+ # For Compiling: build-essential
+ 
+ RUN apt-get install -y wget build-essential cmake
+ 
+ RUN mkdir /src
+ RUN wget -O /src/eigen-3.3.1.tar.gz http://bitbucket.org/eigen/eigen/get/3.3.1.tar.gz
+ RUN wget -O /src/oiio-latest.tar.gz https://github.com/OpenImageIO/oiio/tarball/master
+ RUN wget -O /src/ceres-solver-1.12.tar.gz https://ceres-solver.googlesource.com/ceres-solver/+archive/029799d757b4ed2be5af64899178928f18cb6e28.tar.gz
+ RUN wget -O /src/theia-latest.tar.gz https://github.com/sweeneychris/TheiaSfM/archive/v0.7.tar.gz
+ 
+ #Make and Install Eigen
+ RUN tar -C /src/ -xvf /src/eigen-3.3.1.tar.gz
+ RUN mkdir /src/eigen-eigen-f562a193118d/build
+ RUN cd /src/eigen-eigen-f562a193118d/build; cmake ..
+ RUN cd /src/eigen-eigen-f562a193118d/build; make install
+ 
+ #Make OIIO
+ RUN tar -C /src/ -xvf /src/oiio-latest.tar.gz
+ RUN apt-get install -y libtiff-dev libpng-dev libopenexr-dev libboost-regex-dev libboost-thread-dev libboost-filesystem-dev
+ RUN cd /src/OpenImageIO-oiio-*; make -j4
+ RUN ln -s /src/OpenImageIO-oiio-*/dist/linux64/include/OpenImageIO /usr/include/OpenImageIO;ln -s /src/OpenImageIO-oiio-*/dist/linux64/lib/* /usr/lib/
+ 
+ #Make and Install Ceres Solver
+ RUN mkdir -p /src/ceres-src/build
+ RUN tar -C /src/ceres-src/ -xvf /src/ceres-solver-1.12.tar.gz
+ RUN apt-get install -y libgoogle-glog-dev libsuitesparse-dev
+ RUN cd /src/ceres-src/build; cmake ..; make -j4
+ RUN cd /src/ceres-src/build; make install
+ 
+ #Make & Install Theia
+ RUN apt-get install -y libhdf5-dev libgflags-dev mesa-common-dev libgl1-mesa-dev freeglut3-dev libxmu-dev libxi-dev
+ RUN tar -C /src/ -xvf /src/theia-latest.tar.gz
+ RUN mkdir /src/TheiaSfM-0.7/theia-build
+ RUN cd /src/TheiaSfM-0.7/theia-build; cmake ..
+ RUN cd /src/TheiaSfM-0.7/theia-build; make -j4
+ ENV PATH $PATH:/src/TheiaSfM-0.7/theia-build/bin
+ CMD /bin/bash
+
+If the build is successful you can then use the container as an interactive bash shell to test Theia, or you can mount volumes and perform a reconstruction using images on the host operating system.
+
+This example will run 'build_reconstruction' on the images and flag file in /home/user/theia.  The resulting reconstruction file should be written to /src/working-path in order to end up on the host operating system.  Anything not written to /src/working-path will be removed when the container is finished.  You can disable this behavior by omitting the --rm=true flag, or set it to false.
+
+.. code-block:: bash
+
+ docker run -it --rm=true -v /home/user/theia:/src/working-path theia:latest /src/TheiaSfM-0.7/theia-build/bin/build_reconstruction --flagfile=/src/working-path/flags.txt
+
+Make sure your flag file is also in the same path as your input set and that the paths in it reference the path inside the container, not the path on your host.  See Docker's documentation on Volumes for more information.
