@@ -79,9 +79,9 @@ It is possible to customize the build process by passing appropriate flags to
 Using a Docker Container
 --------
 
-Building and reconstruction can be performed utilizing a Docker container.  You can install docker on a variety of platforms such as Linux, Windows, Mac, Azure, AWS or a Windows Server.  This has only been testing using the Linux distribution of Docker, but the other platforms may work as well.
+Building and reconstruction can be performed utilizing a Docker container.  You can install docker on a variety of platforms such as Linux, Windows, Mac, Azure, AWS or a Windows Server.  This has only been tested using the Linux distribution of Docker, but the other platforms may work as well.
 
-First, install Docker, and create a dockerfile like the following:
+First, install Docker using the instructions from the website (https://www.docker.com/), and create a dockerfile like the below:
 
 .. code-block:: bash
 
@@ -125,6 +125,13 @@ First, install Docker, and create a dockerfile like the following:
  RUN cd /src/TheiaSfM-0.7/theia-build; make -j4
  ENV PATH $PATH:/src/TheiaSfM-0.7/theia-build/bin
  CMD /bin/bash
+
+Once you have created the "Dockerfile", build the image:
+
+.. code-block:: bash
+
+ docker build -t theia:0.7 /path/to/dockerfile
+ 
 
 If the build is successful you can then use the container as an interactive bash shell to test Theia, or you can mount volumes and perform a reconstruction using images on the host operating system.
 
