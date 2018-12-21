@@ -37,7 +37,7 @@
 #include "statx/distributions/evd/gpd_ceres.h"
 #endif
 
-namespace libstatx {
+namespace vstatx {
 namespace distributions {
 namespace evd {
 
@@ -64,6 +64,6 @@ bool gpdfit(const vector<double>& data,
   }
   return exit_flag;
 }
-}  // namespce evd
-}  // namespce distributions
-}  // namespace libstatx
+}  // evd
+}  // distributions
+}  // statx

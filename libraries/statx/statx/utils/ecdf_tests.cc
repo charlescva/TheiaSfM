@@ -32,24 +32,23 @@
 #include "statx/utils/ecdf.h"
 #include <cmath>
 #include <random>
-#include <vector>
 #include <glog/logging.h>
 #include "gtest/gtest.h"
 
-namespace libstatx {
+namespace vstatx {
 namespace utils {
-TEST(EcdfTest, NoData) {
-  // Calculating the ECDF.
+TEST(ECDF, NO_DATA) {
+  // Calculating the ECDF
   std::vector<double> fx, x, y;
   ecdf(y, &fx, &x);
-  EXPECT_EQ(fx.size(), 0);
+  ASSERT_EQ(fx.size(), 0);
 
   ecdf(y, &fx, &x);
-  EXPECT_EQ(x.size(), 0);
+  ASSERT_EQ(x.size(), 0);
 }
 
-TEST(EcdfTest, RayleighCdf) {
-  // Generate data for Rayleigh.
+TEST(ECDF, RAYLEIGH_CDF) {
+  // Generate data for Rayleigh
   std::random_device rd;
   std::mt19937 rng(rd());
   double lambda = 1.0;  // Exponential parameter
@@ -70,11 +69,11 @@ TEST(EcdfTest, RayleighCdf) {
   for (unsigned int i = 0; i < fx.size(); i++) {
     double F = 1.0 - exp(-x[i]*x[i]/2);  // CDF closed form
     double err = F - fx[i];
-    EXPECT_GT(0.9, fabs(err));
+    ASSERT_GT(0.9, fabs(err));
   }
 }
 
-TEST(EcdfTest, ExponentialCdf) {
+TEST(ECDF, EXPONENTIAL_CDF) {
   // Generate data for Exponential
   std::random_device rd;
   std::mt19937 rng(rd());
@@ -94,9 +93,8 @@ TEST(EcdfTest, ExponentialCdf) {
   for (unsigned int i = 0; i < fx.size(); i++) {
     double F = 1.0 - exp(-lambda*x[i]);  // CDF closed form
     double err = F - fx[i];
-    EXPECT_GT(0.9, fabs(err));
+    ASSERT_GT(0.9, fabs(err));
   }
 }
-
-}  // namespace utils
-}  // namespace libstatx
+}  // utils
+}  // statx

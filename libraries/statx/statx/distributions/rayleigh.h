@@ -35,18 +35,20 @@
 #include <cmath>
 #include <vector>
 
-namespace libstatx {
+namespace vstatx {
 namespace distributions {
 
 // Calculates the Rayleigh density at x with sigma as its parameter
-inline double raylpdf(const double x, const double sigma) {
+inline double raylpdf(const double x,
+                      const double sigma) {
   const double sigma_sqrd = sigma*sigma;
   return x * exp(-0.5 * x*x / sigma_sqrd) / sigma_sqrd;
 }
 
 // Calculates the Rayleigh cummulative probability at x with sigma as its
 // parameter.
-inline double raylcdf(const double x, const double sigma) {
+inline double raylcdf(const double x,
+                      const double sigma) {
   const double sigma_sqrd = sigma*sigma;
   return 1.0 - exp(-0.5 * x*x / sigma_sqrd);
 }
@@ -58,7 +60,6 @@ inline double raylfit(const std::vector<double>& samples) {
   sigma = 0.5 * sigma / samples.size();
   return sqrt(sigma);
 }
-}  // namespace distributions
-}  // namespace libstatx
-
+}  // distributions
+}  // statx
 #endif  // STATX_DISTRIBUTIONS_RAYLEIGH_H_

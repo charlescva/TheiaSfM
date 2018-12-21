@@ -36,7 +36,7 @@
 #include <vector>
 #include <ceres/ceres.h>
 
-namespace libstatx {
+namespace vstatx {
 namespace distributions {
 namespace evd {
 // GEV fit using the quantile least-squares method
@@ -65,7 +65,7 @@ class GEVCostFunctionAnalytic :
   const double z_;  // quantile
   const double p_;  // percentile
 };
-}  // namespace evd
-}  // namespace distributions
-}  // namespace libstatx
+}  // evd
+}  // distributions
+}  // statx
 #endif  // STATX_DISTRIBUTIONS_EVD_GEV_CERES_H_

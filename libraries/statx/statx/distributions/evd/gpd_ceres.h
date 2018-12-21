@@ -35,7 +35,7 @@
 #include <vector>
 #include <ceres/ceres.h>
 
-namespace libstatx {
+namespace vstatx {
 namespace distributions {
 namespace evd {
 // Parameter estimation for the generalized Pareto distribution (GPD)
@@ -65,7 +65,7 @@ class GPDCostFunctionAnalytic :
   const double z_;  // quantile
   const double p_;  // percentile
 };
-}  // namespace evd
-}  // namespace distributions
-}  // namespace libstatx
+}  // evd
+}  // distributions
+}  // statx
 #endif  // STATX_DISTRIBUTIONS_EVD_GPD_CERES_H_

@@ -29,7 +29,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include <vector>
 #include <glog/logging.h>
 #include "gtest/gtest.h"
 #include "statx/distributions/evd/gev.h"
@@ -40,7 +39,7 @@
 #include "statx/utils/common_funcs.h"
 #include "statx/utils/ecdf.h"
 
-namespace libstatx {
+namespace vstatx {
 namespace distributions {
 namespace evd {
 using std::vector;
@@ -158,7 +157,7 @@ TEST(GEV, MLE1) {
   const double mle_matlab = 296.1117;
   double mle_val = mle(x);
   VLOG(1) << "MLE=" << mle_val << " MLE (Matlab): " << mle_matlab;
-  EXPECT_NEAR(mle_matlab, mle_val, 1e-3);
+  ASSERT_NEAR(mle_matlab, mle_val, 1e-3);
 }
 
 TEST(GEV, MLE2) {
@@ -175,7 +174,7 @@ TEST(GEV, MLE2) {
   const double mle_matlab = 224.0336;
   double mle_val = mle(x);
   VLOG(1) << "MLE=" << mle_val << " MLE (Matlab): " << mle_matlab;
-  EXPECT_NEAR(mle_matlab, mle_val, 1e-3);
+  ASSERT_NEAR(mle_matlab, mle_val, 1e-3);
 }
 
 TEST(GEV, MLE_Penalties) {
@@ -188,7 +187,7 @@ TEST(GEV, MLE_Penalties) {
   x(2) = 0.5;  // xi (Shape parameter)
   double mle_val = mle(x);
   VLOG(1) << "MLE val: " << mle_val;
-  EXPECT_GT(mle_val, 1e+10);
+  ASSERT_GT(mle_val, 1e+10);
 
   // Bad Values that should add some cost
   // Violating 1 + xi*(z - mu)/sigma
@@ -197,7 +196,7 @@ TEST(GEV, MLE_Penalties) {
   x(2) = -0.5;  // xi (Shape parameter)
   mle_val = mle(x);
   VLOG(1) << "MLE val: " << mle_val;
-  EXPECT_GT(mle_val, 1e+10);
+  ASSERT_GT(mle_val, 1e+10);
 
   // Bad Values that should add some cost
   // Violating sigma <= 0
@@ -206,7 +205,7 @@ TEST(GEV, MLE_Penalties) {
   x(2) = 0.5;  // xi (Shape parameter)
   mle_val = mle(x);
   VLOG(1) << "MLE val: " << mle_val;
-  EXPECT_GT(mle_val, 0.0);
+  ASSERT_GT(mle_val, 0.0);
 }
 
 TEST(GEV, GradientFunctor) {
@@ -223,7 +222,7 @@ TEST(GEV, GradientFunctor) {
   gradient(x, &g);
   VLOG(1) << "Gradient: " << g.transpose();
   double norm = g.norm();
-  EXPECT_LT(norm, sqrt(n));
+  ASSERT_LT(norm, sqrt(n));
 
   // ML estimates (MATLAB): xi=-0.5563 sigma=2.5907 mu=5.4223
   GEVMLEGradientFunctor gradient2(gev_data2);
@@ -236,7 +235,7 @@ TEST(GEV, GradientFunctor) {
   gradient2(x, &g);
   VLOG(1) << "Gradient: " << g.transpose();
   norm = g.norm();
-  EXPECT_LT(norm, sqrt(n));
+  ASSERT_LT(norm, sqrt(n));
 }
 
 TEST(GEV, PDF) {
@@ -254,12 +253,12 @@ TEST(GEV, PDF) {
     double x = i*dx;
     double y_gt = gevpdf_data[i];
     double y = gevpdf(x, mu, sigma, xi);
-    EXPECT_NEAR(y_gt, y, 1e-2);
+    ASSERT_NEAR(y_gt, y, 1e-2);
   }
   // Test for last samples (x_final)
   double y_gt = gevpdf_data[nsamples];
   double y = gevpdf(x_final, mu, sigma, xi);
-  EXPECT_NEAR(y_gt, y, 1e-2);
+  ASSERT_NEAR(y_gt, y, 1e-2);
 }
 
 TEST(GEV, CDF) {
@@ -277,12 +276,12 @@ TEST(GEV, CDF) {
     double x = i*dx;
     double y_gt = gevcdf_data[i];
     double y = gevcdf(x, mu, sigma, xi);
-    EXPECT_NEAR(y_gt, y, 1e-2);
+    ASSERT_NEAR(y_gt, y, 1e-2);
   }
   // Test for last samples (x_final)
   double y_gt = gevcdf_data[nsamples];
   double y = gevcdf(x_final, mu, sigma, xi);
-  EXPECT_NEAR(y_gt, y, 1e-2);
+  ASSERT_NEAR(y_gt, y, 1e-2);
 }
 
 TEST(GEV, FitMLE1) {
@@ -292,11 +291,11 @@ TEST(GEV, FitMLE1) {
   double mu = 10.0;
   double sigma = 2.5;
   double xi = 0.5;
-  EXPECT_TRUE(gevfit(gev_data, &mu, &sigma, &xi));
+  ASSERT_TRUE(gevfit(gev_data, &mu, &sigma, &xi));
   VLOG(1) << "mu=" << mu << " sigma=" << sigma << " xi=" << xi;
-  EXPECT_NEAR(mu_gt, mu, 1.0);
-  EXPECT_NEAR(sigma_gt, sigma, 1.0);
-  EXPECT_NEAR(xi_gt, xi, 1.0);
+  ASSERT_NEAR(mu_gt, mu, 1.0);
+  ASSERT_NEAR(sigma_gt, sigma, 1.0);
+  ASSERT_NEAR(xi_gt, xi, 1.0);
 }
 
 TEST(GEV, FitMLE2) {
@@ -306,11 +305,11 @@ TEST(GEV, FitMLE2) {
   double mu = 10.0;
   double sigma = 2.5;
   double xi = 0.5;
-  EXPECT_TRUE(gevfit(gev_data2, &mu, &sigma, &xi));
+  ASSERT_TRUE(gevfit(gev_data2, &mu, &sigma, &xi));
   VLOG(1) << "mu=" << mu << " sigma=" << sigma << " xi=" << xi;
-  EXPECT_NEAR(mu_gt, mu, 1.0);
-  EXPECT_NEAR(sigma_gt, sigma, 1.0);
-  EXPECT_NEAR(xi_gt, xi, 1.0);
+  ASSERT_NEAR(mu_gt, mu, 1.0);
+  ASSERT_NEAR(sigma_gt, sigma, 1.0);
+  ASSERT_NEAR(xi_gt, xi, 1.0);
 }
 
 TEST(GEV, Quantile) {
@@ -323,7 +322,7 @@ TEST(GEV, Quantile) {
   for (int i = 0; i < gevinv_data.size(); i++) {
     const double z = gevinv_data[i];
     double q = gev_quantile(p, mu, sigma, xi);
-    EXPECT_NEAR(q, z, 0.1);
+    ASSERT_NEAR(q, z, 0.1);
     p += 0.1;
   }
 }
@@ -357,8 +356,8 @@ TEST(GEV, CERES_GEVCostFunction) {
 
   for (int i = 0; i < fx.size() - 1; i++) {
     GEVCostFunctionAnalytic cost(x[i], fx[i]);
-    EXPECT_TRUE(cost.Evaluate(&parameters[0], &residuals, &jacobians[0]));
-    EXPECT_TRUE(std::isfinite(residual));
+    ASSERT_TRUE(cost.Evaluate(&parameters[0], &residuals, &jacobians[0]));
+    ASSERT_TRUE(std::isfinite(residual));
   }
 
   delete [] params;
@@ -371,7 +370,7 @@ TEST(GEV, FitQuantileLeastSquares_Case1) {
   double mu = 10.0;
   double sigma = 2.5;
   double xi = 0.5;
-  EXPECT_TRUE(gevfit(gev_data, &mu, &sigma, &xi, QUANTILE_NLS));
+  ASSERT_TRUE(gevfit(gev_data, &mu, &sigma, &xi, QUANTILE_NLS));
   VLOG(1) << "mu=" << mu << " sigma=" << sigma << " xi=" << xi;
   vector<double> fx, x;
   statx::utils::ecdf(gev_data, &fx, &x);
@@ -384,14 +383,14 @@ TEST(GEV, FitQuantileLeastSquares_Case1) {
   }
   mse = sqrt(mse)/x.size();
   VLOG(1) << "MSE: " << mse;
-  EXPECT_LT(mse, 1.0);
+  ASSERT_LT(mse, 1.0);
 
   const double mu_gt = 10.0;
   const double sigma_gt = 2.5;
   const double xi_gt = 0.5;
-  EXPECT_NEAR(mu_gt, mu, 1.0);
-  EXPECT_NEAR(sigma_gt, sigma, 1.0);
-  EXPECT_NEAR(xi_gt, xi, 1.0);
+  ASSERT_NEAR(mu_gt, mu, 1.0);
+  ASSERT_NEAR(sigma_gt, sigma, 1.0);
+  ASSERT_NEAR(xi_gt, xi, 1.0);
 }
 
 TEST(GEV, FitQuantileLeastSquares_Case2) {
@@ -399,7 +398,7 @@ TEST(GEV, FitQuantileLeastSquares_Case2) {
   double sigma = 2.5;
   double xi = -0.3;
 
-  EXPECT_TRUE(gevfit(gev_data2, &mu, &sigma, &xi, QUANTILE_NLS));
+  ASSERT_TRUE(gevfit(gev_data2, &mu, &sigma, &xi, QUANTILE_NLS));
   VLOG(1) << "mu=" << mu << " sigma=" << sigma << " xi=" << xi;
 
   vector<double> fx, x;
@@ -413,16 +412,16 @@ TEST(GEV, FitQuantileLeastSquares_Case2) {
   }
   mse = sqrt(mse)/x.size();
   VLOG(1) << "MSE: " << mse;
-  EXPECT_LT(mse, 1.0);
+  ASSERT_LT(mse, 1.0);
 
   const double mu_gt = 5.0;
   const double sigma_gt = 2.5;
   const double xi_gt = -0.4;
-  EXPECT_NEAR(mu_gt, mu, 1.0);
-  EXPECT_NEAR(sigma_gt, sigma, 1.0);
-  EXPECT_NEAR(xi_gt, xi, 1.0);
+  ASSERT_NEAR(mu_gt, mu, 1.0);
+  ASSERT_NEAR(sigma_gt, sigma, 1.0);
+  ASSERT_NEAR(xi_gt, xi, 1.0);
 }
 #endif
-}  // namespace evd
-}  // namespace distributions
-}  // namespace libstatx
+}  // evd
+}  // distributions
+}  // statx

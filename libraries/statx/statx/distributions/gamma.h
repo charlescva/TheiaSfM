@@ -36,11 +36,12 @@
 #include <vector>
 #include <limits>
 
-namespace libstatx {
+namespace vstatx {
 namespace distributions {
-// Evaluates the lower incomplete gamma
-// Parameters a & x >= 0
-inline double lower_inc_gamma(const double a, const double x) {
+/// Evaluates the lower incomplete gamma
+/// Parameters a & x >= 0
+inline double lower_inc_gamma(const double a,
+                              const double x) {
   if (a <= 0.0 || x <= 0.0) return std::numeric_limits<double>::infinity();
   double acc = 0.0;
   double term = 1.0 / a;
@@ -78,7 +79,7 @@ inline double gammacdf(const double x,
   if (x <= 0.0 || k <= 0.0 || theta <= 0.0) return 0.0;
   double term1 = 1.0 / tgamma(k);
   double term2 = lower_inc_gamma(k, x / theta);
-  return term1 * term2;
+  return term1*term2;
 }
 
 // Computes the Maximum Likelihood estimate of the Gamma distribution
@@ -87,6 +88,6 @@ inline double gammacdf(const double x,
 bool gammafit(const std::vector<double>& data,
               double* k,  // shape
               double* theta /* scale*/);
-}  // namespace distributions
-}  // namespace libstatx
+}  // distributions
+}  // statx
 #endif  // STATX_DISTRIBUTIONS_GAMMA_H_

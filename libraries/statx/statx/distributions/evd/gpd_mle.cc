@@ -29,16 +29,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include <vector>
-#include <limits>
-
-#include <Eigen/Core>
 #include <glog/logging.h>
 #include <optimo/solvers/bfgs.h>
+#include <limits>
 #include "statx/distributions/evd/gpd_mle.h"
 #include "statx/utils/common_funcs.h"
 
-namespace libstatx {
+namespace vstatx {
 namespace distributions {
 namespace evd {
 
@@ -137,8 +134,8 @@ bool gpdfit_mle(const vector<double>& data,
   GPDMLEHessianFunctor h;
   GPDMLEProblem mle_problem(mle, gradient, h);
 
-  const double mean = libstatx::utils::mean(data);
-  const double temp = libstatx::utils::stddev(data, mean);
+  const double mean = vstatx::utils::mean(data);
+  const double temp = vstatx::utils::stddev(data, mean);
   const double var = temp*temp;
   const double mean_sqrd= mean*mean;
 
@@ -174,7 +171,6 @@ bool gpdfit_mle(const vector<double>& data,
                          << " min_val: " << min_val;
   return exit_flag;
 }
-
-}  // namespace evd
-}  // namespace distributions
-}  // namespace libstatx
+}  // evd
+}  // distributions
+}  // statx

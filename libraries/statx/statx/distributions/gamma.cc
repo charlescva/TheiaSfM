@@ -31,11 +31,10 @@
 
 #include "statx/distributions/gamma.h"
 #include <cmath>
-#include <vector>
 #include <asa121.hpp>
 #include <asa103.hpp>
 
-namespace libstatx {
+namespace vstatx {
 namespace distributions {
 using std::vector;
 using asa103::digamma;
@@ -83,6 +82,5 @@ bool gammafit(const vector<double>& data,
   *theta = mean / (*k);
   return true;
 }
-
-}  // namespace distributions
-}  // namespace libstatx
+}  // distributions
+}  // statx

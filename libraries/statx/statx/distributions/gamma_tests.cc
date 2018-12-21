@@ -30,12 +30,10 @@
 //
 
 #include "statx/distributions/gamma.h"
-
-#include <vector>
 #include <glog/logging.h>
 #include "gtest/gtest.h"
 
-namespace libstatx {
+namespace vstatx {
 namespace distributions {
 using std::vector;
 // Data generated w/ Matlab: gamrnd(10,5,1,100);
@@ -183,22 +181,22 @@ const vector<double> gamma_cdf_data2 {
 
 TEST(Gamma, FitMLE1) {
   double k, theta;
-  EXPECT_TRUE(gammafit(gamma_data, &k, &theta));
+  ASSERT_TRUE(gammafit(gamma_data, &k, &theta));
   VLOG(1) << "k: " << k << " theta: " << theta;
   const double k_gt = 10;
   const double theta_gt = 5.0;
-  EXPECT_NEAR(k, k_gt, 1.0);
-  EXPECT_NEAR(theta, theta_gt, 1.0);
+  ASSERT_NEAR(k, k_gt, 1.0);
+  ASSERT_NEAR(theta, theta_gt, 1.0);
 }
 
 TEST(Gamma, FitMLE2) {
   double k, theta;
-  EXPECT_TRUE(gammafit(gamma_data2, &k, &theta));
+  ASSERT_TRUE(gammafit(gamma_data2, &k, &theta));
   VLOG(1) << "k: " << k << " theta: " << theta;
   const double k_gt = 5.0;
   const double theta_gt = 5.0;
-  EXPECT_NEAR(k, k_gt, 1.0);
-  EXPECT_NEAR(theta, theta_gt, 1.0);
+  ASSERT_NEAR(k, k_gt, 1.0);
+  ASSERT_NEAR(theta, theta_gt, 1.0);
 }
 
 TEST(Gamma, PDF) {
@@ -210,7 +208,7 @@ TEST(Gamma, PDF) {
   for (int i = 0; i < nel; i++) {
     const double y = gammapdf(x, k, theta);
     const double y_gt = gamma_pdf_data[i];
-    EXPECT_NEAR(y_gt, y,  1e-2);
+    ASSERT_NEAR(y_gt, y,  1e-2);
     x += dx;
   }
 }
@@ -224,7 +222,7 @@ TEST(Gamma, CDF) {
   for (int i = 0; i < nel; i++) {
     const double y = gammacdf(x, k, theta);
     const double y_gt = gamma_cdf_data[i];
-    EXPECT_NEAR(y_gt, y,  1e-2);
+    ASSERT_NEAR(y_gt, y,  1e-2);
     x += dx;
   }
 }
@@ -239,7 +237,7 @@ TEST(Gamma, CDF2) {
   for (int i = 0; i < nel; i++) {
     const double y = gammacdf(x, k, theta);
     const double y_gt = gamma_cdf_data2[i];
-    EXPECT_NEAR(y_gt, y,  1e-2);
+    ASSERT_NEAR(y_gt, y,  1e-2);
     x += dx;
   }
 }
@@ -250,8 +248,7 @@ TEST(Gamma, LowerIncompleteGamma) {
   double a = 1.0;
   double res_gt = 0.6321;
   double res = lower_inc_gamma(a, x);
-  EXPECT_NEAR(res_gt, res, 1e-3);
+  ASSERT_NEAR(res_gt, res, 1e-3);
 }
-
-}  // namespace distributions.
-}  // namespace libstatx
+}  // distributions
+}  // statx
