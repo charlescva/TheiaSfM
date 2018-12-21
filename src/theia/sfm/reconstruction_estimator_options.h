@@ -49,7 +49,8 @@ namespace theia {
 // is less scalable but often more robust.
 enum class ReconstructionEstimatorType {
   GLOBAL = 0,
-  INCREMENTAL = 1
+  INCREMENTAL = 1,
+  HYBRID = 2
 };
 
 // The recommended type of rotations solver is the Robust L1-L2 method. This
@@ -87,7 +88,7 @@ struct ReconstructionEstimatorOptions {
       GlobalRotationEstimatorType::ROBUST_L1L2;
 
   GlobalPositionEstimatorType global_position_estimator_type =
-      GlobalPositionEstimatorType::NONLINEAR;
+      GlobalPositionEstimatorType::LEAST_UNSQUARED_DEVIATION;
 
   // The random number generator used to generate random numbers through the
   // reconstruction estimation process. If this is a nullptr then the random
@@ -104,15 +105,6 @@ struct ReconstructionEstimatorOptions {
   // Any edges in the view graph with fewer than min_num_two_view_inliers will
   // be removed as an initial filtering step.
   int min_num_two_view_inliers = 30;
-
-  // After computing a model and performing an initial BA, the reconstruction
-  // can be further improved (and even densified) if we attempt (again) to
-  // retriangulate any tracks that are currently unestimated. For each
-  // retriangulation iteration we do the following:
-  //   1. Remove features that are above max_reprojection_error_in_pixels.
-  //   2. Triangulate all unestimated tracks.
-  //   3. Perform full bundle adjustment.
-  int num_retriangulation_iterations = 1;
 
   // --------------- RANSAC Options --------------- //
   double ransac_confidence = 0.9999;
@@ -207,6 +199,15 @@ struct ReconstructionEstimatorOptions {
   // controls how many views should be part of the partial BA.
   int partial_bundle_adjustment_num_views = 20;
 
+  // --------------------- Hybrid SfM Options --------------------- //
+
+  // The relative position of the initial pair used for the incremental portion
+  // of hybrid sfm is re-estimated using a simplified relative translations
+  // solver (assuming known rotation). The relative position is re-estimated
+  // using a RANSAC procedure with the inlier threshold defined by this
+  // parameter.
+  double relative_position_estimation_max_sampson_error_pixels = 4.0;
+
   // --------------- Triangulation Options --------------- //
 
   // Minimum angle required between a 3D point and 2 viewing rays in order to
@@ -220,6 +221,18 @@ struct ReconstructionEstimatorOptions {
   bool bundle_adjust_tracks = true;
 
   // --------------- Bundle Adjustment Options --------------- //
+
+  // After computing a model and performing an initial BA, the reconstruction
+  // can be further improved (and even densified) if we attempt (again) to
+  // retriangulate any tracks that are currently unestimated. For each
+  // retriangulation iteration we do the following:
+  //   1. Remove features that are above max_reprojection_error_in_pixels.
+  //   2. Triangulate all unestimated tracks.
+  //   3. Perform full bundle adjustment.
+  //
+  // NOTE: This is only utilized in the Global SfM module.
+  int num_retriangulation_iterations = 1;
+
 
   // For bundle adjustment, we may want to use a robust loss function to improve
   // robustness to outliers. The various types of robust loss functions used can
@@ -243,6 +256,48 @@ struct ReconstructionEstimatorOptions {
   OptimizeIntrinsicsType intrinsics_to_optimize =
       OptimizeIntrinsicsType::FOCAL_LENGTH |
       OptimizeIntrinsicsType::RADIAL_DISTORTION;
+
+  // --------------- Track Subsampling Options --------------- //
+
+  // Bundle adjustment performs joint nonlinear optimization of point positions
+  // and camera poses by minimizing reprojection error. For many scenes, the 3d
+  // points can be highly redundant such that adding more points only marginally
+  // improves the reconstruction quality (if at all) despite a large increase in
+  // runtime. As such, we can reduce the number of 3d points used in bundle
+  // adjustment and still achieve similar or even better quality reconstructions
+  // by carefully choosing the points such that they properly constrain the
+  // optimization.
+  //
+  // If subsampling the tracks is set to true, then the 3d points are chosen
+  // such that they fit the following criteria:
+  //
+  //    a) High confidence (i.e. low reprojection error).
+  //    b) Long tracks are preferred.
+  //    c) The tracks used for optimization provide a good spatial coverage in
+  //       each image.
+  //    d) Each view observes at least K optimized tracks.
+  //
+  // Tracks are selected to optimize for these criteria using the thresholds
+  // below.
+  bool subsample_tracks_for_bundle_adjustment = false;
+
+  // Long tracks are preferred during the track subsampling, but csweeney has
+  // observed that long tracks often are more likely to contain outlier. Thus,
+  // we cap the track length for track selection at 10 then sort tracks first by
+  // the truncated track length, then secondarily by their mean reprojection
+  // error. This allows us to choose the high quality tracks among all the long
+  // tracks.
+  int track_subset_selection_long_track_length_threshold = 10;
+
+  // To satisfy c) above, we divide each image into an image grid with grid cell
+  // widths specified by this threshold. The top ranked track in each grid cell
+  // is chosen to be optimized so that each image has a good spatial coverage.
+  int track_selection_image_grid_cell_size_pixels = 100;
+
+  // The minimum number of optimized tracks required for each view when using
+  // track subsampling. If the view does not observe this many tracks, then all
+  // tracks in the view are optimized.
+  int min_num_optimized_tracks_per_view = 200;
 };
 
 }  // namespace theia

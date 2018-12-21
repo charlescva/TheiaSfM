@@ -40,8 +40,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "theia/sfm/global_pose_estimation/position_estimator.h"
 #include "theia/sfm/feature.h"
+#include "theia/sfm/global_pose_estimation/position_estimator.h"
 #include "theia/sfm/types.h"
 #include "theia/sfm/view_triplet.h"
 #include "theia/util/util.h"
@@ -84,28 +84,48 @@ class LinearPositionEstimator : public PositionEstimator {
   Feature GetNormalizedFeature(const View& view, const TrackId track_id);
 
   // Computes the relative baselines between three views in a triplet. The
-  // baseline is estimated from the depths of triangulated 3D points.
-  void ComputeBaselineRatioForTriplet(const ViewTriplet& triplet,
+  // baseline is estimated from the depths of triangulated 3D points. The
+  // relative positions of the triplets are then scaled to account for the
+  // baseline ratios.
+  void ComputeBaselineRatioForTriplet(const ViewIdTriplet& triplet,
                                       Eigen::Vector3d* baseline);
 
-  // Sets up the linear system with the constraints that each triplet adds.
-  void CreateLinearSystem(
-      const std::unordered_map<ViewId, Eigen::Vector3d>& orientations,
-      const std::vector<Eigen::Vector3d>& baselines,
-      Eigen::SparseMatrix<double>* constraint_matrix);
+  // Store the triplet.
+  void AddTripletConstraint(const ViewIdTriplet& view_triplet);
 
+  // Sets up the linear system with the constraints that each triplet adds.
+  void CreateLinearSystem(Eigen::SparseMatrix<double>* constraint_matrix);
+
+  void AddTripletConstraintToSparseMatrix(
+      const ViewId view_id1,
+      const ViewId view_id2,
+      const ViewId view_id3,
+      const Eigen::Vector3d& baseline,
+      std::unordered_map<std::pair<int, int>, double>* sparse_matrix_entries);
+
+  // A helper method to compute the relative rotations between translation
+  // directions.
+  void ComputeRotatedRelativeTranslationRotations(const ViewId view_id0,
+                                                  const ViewId view_id1,
+                                                  const ViewId view_id2,
+                                                  Eigen::Matrix3d* r012,
+                                                  Eigen::Matrix3d* r201,
+                                                  Eigen::Matrix3d* r120);
   // Positions are estimated from an eigenvector that is unit-norm with an
   // ambiguous sign. To ensure that the sign of the camera positions is correct,
   // we measure the relative translations from estimated camera positions and
   // compare that to the relative positions. If the sign is incorrect, we flip
   // the sign of all camera positions.
   void FlipSignOfPositionsIfNecessary(
-      const std::unordered_map<ViewId, Eigen::Vector3d>& orientations,
       std::unordered_map<ViewId, Eigen::Vector3d>* positions);
 
   const Options options_;
   const Reconstruction& reconstruction_;
-  std::vector<ViewTriplet> triplets_;
+  const std::unordered_map<ViewIdPair, TwoViewInfo>* view_pairs_;
+  const std::unordered_map<ViewId, Eigen::Vector3d>* orientations_;
+
+  std::vector<ViewIdTriplet> triplets_;
+  std::vector<Eigen::Vector3d> baselines_;
 
   // We keep one of the positions as constant to remove the ambiguity of the
   // origin of the linear system.

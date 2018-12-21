@@ -61,7 +61,6 @@ void SetSolverOptions(const BundleAdjustmentOptions& options,
   solver_options->visibility_clustering_type = ceres::CANONICAL_VIEWS;
   solver_options->logging_type = ceres::SILENT;
   solver_options->num_threads = options.num_threads;
-  solver_options->num_linear_solver_threads = options.num_threads;
   solver_options->max_num_iterations = 200;
   // Solver options takes ownership of the ordering so that we can order the BA
   // problem by points and cameras.
@@ -77,7 +76,7 @@ void AddCameraParametersToProblem(const bool constant_extrinsic_parameters,
                                   ceres::Problem* problem) {
   double* camera_extrinsics = camera->mutable_extrinsics();
   double* camera_intrinsics = camera->mutable_intrinsics();
-  const int num_intrinsics = camera->CameraIntrinsics().NumParameters();
+  const int num_intrinsics = camera->CameraIntrinsics()->NumParameters();
 
   // Add extrinsics to problem
   problem->AddParameterBlock(camera_extrinsics, Camera::kExtrinsicsSize);

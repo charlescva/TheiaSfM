@@ -41,7 +41,9 @@
 #include "theia/image/image.h"
 #include "theia/sfm/camera/camera.h"
 #include "theia/sfm/camera/camera_intrinsics_model.h"
+#include "theia/sfm/camera/division_undistortion_camera_model.h"
 #include "theia/sfm/camera/fisheye_camera_model.h"
+#include "theia/sfm/camera/fov_camera_model.h"
 #include "theia/sfm/camera/pinhole_camera_model.h"
 #include "theia/sfm/camera/pinhole_radial_tangential_camera_model.h"
 #include "theia/sfm/reconstruction.h"
@@ -77,7 +79,10 @@ void SetLensDistortionToZero(Camera* camera) {
       intrinsics[FisheyeCameraModel::RADIAL_DISTORTION_4] = 0.0;
       break;
     case CameraIntrinsicsModelType::FOV:
-      intrinsics[FisheyeCameraModel::RADIAL_DISTORTION_1] = 0.0;
+      intrinsics[FOVCameraModel::RADIAL_DISTORTION_1] = 0.0;
+      break;
+    case CameraIntrinsicsModelType::DIVISION_UNDISTORTION:
+      intrinsics[DivisionUndistortionCameraModel::RADIAL_DISTORTION_1] = 0.0;
       break;
     default:
       LOG(FATAL) << "Invalid camera intrinsics type.";
@@ -95,9 +100,9 @@ void FindUndistortedImageBoundary(const Camera& distorted_camera,
                                   const Camera& undistorted_camera,
                                   Eigen::Vector4d* bounds) {
   const CameraIntrinsicsModel& distorted_intrinsics =
-      distorted_camera.CameraIntrinsics();
+      *distorted_camera.CameraIntrinsics();
   const CameraIntrinsicsModel& undistorted_intrinsics =
-      undistorted_camera.CameraIntrinsics();
+      *undistorted_camera.CameraIntrinsics();
 
   // Find the max and min locations of the undistorted pixels.
   double left_max_x = std::numeric_limits<double>::lowest();
@@ -153,16 +158,16 @@ void RemoveImageLensDistortion(const Camera& distorted_camera,
                                const Camera& undistorted_camera,
                                FloatImage* undistorted_image) {
   const CameraIntrinsicsModel& distorted_intrinsics =
-      distorted_camera.CameraIntrinsics();
+      *distorted_camera.CameraIntrinsics();
   const CameraIntrinsicsModel& undistorted_intrinsics =
-      undistorted_camera.CameraIntrinsics();
+      *undistorted_camera.CameraIntrinsics();
 
   // For each pixel in the undistorted image, find the coordinate in the
   // distorted image and set the pixel color accordingly.
   const int num_channels = distorted_image.Channels();
-  OpenImageIO::ImageBuf& undistorted_img =
+  oiio::ImageBuf& undistorted_img =
       undistorted_image->GetOpenImageIOImageBuf();
-  OpenImageIO::ImageBuf::Iterator<float> undistorted_it(undistorted_img);
+  oiio::ImageBuf::Iterator<float> undistorted_it(undistorted_img);
   for (; !undistorted_it.done(); ++undistorted_it) {
     Eigen::Vector2d image_point(undistorted_it.x() + 0.5,
                                 undistorted_it.y() + 0.5);
@@ -201,10 +206,8 @@ bool UndistortImage(const Camera& distorted_camera,
                             undistorted_camera.ImageHeight());
 
   // Remap the distorted pixels into the undistorted image.
-  RemoveImageLensDistortion(distorted_camera,
-                            distorted_image,
-                            undistorted_camera,
-                            undistorted_image);
+  RemoveImageLensDistortion(
+      distorted_camera, distorted_image, undistorted_camera, undistorted_image);
 
   return true;
 }
@@ -216,9 +219,8 @@ bool UndistortCamera(const Camera& distorted_camera,
   SetLensDistortionToZero(undistorted_camera);
 
   Eigen::Vector4d undistorted_image_boundaries;
-  FindUndistortedImageBoundary(distorted_camera,
-                               *undistorted_camera,
-                               &undistorted_image_boundaries);
+  FindUndistortedImageBoundary(
+      distorted_camera, *undistorted_camera, &undistorted_image_boundaries);
 
   // Given the locations of the min/max undistorted pixels, compute the scale
   // factor to resize the undistorted image.
@@ -275,9 +277,9 @@ bool UndistortReconstruction(Reconstruction* reconstruction) {
     // The camera intrinsics models describe how to distort and undistort the
     // pixels.
     const CameraIntrinsicsModel& distorted_intrinsics =
-        distorted_camera.CameraIntrinsics();
+        *distorted_camera.CameraIntrinsics();
     const CameraIntrinsicsModel& undistorted_intrinsics =
-        undistorted_camera->CameraIntrinsics();
+        *undistorted_camera->CameraIntrinsics();
 
     // Undisort all features seen by the view.
     const auto track_ids = view->TrackIds();

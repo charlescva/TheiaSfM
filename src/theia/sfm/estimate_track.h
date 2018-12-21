@@ -35,6 +35,8 @@
 #ifndef THEIA_SFM_ESTIMATE_TRACK_H_
 #define THEIA_SFM_ESTIMATE_TRACK_H_
 
+#include <atomic>
+#include <mutex>
 #include <unordered_set>
 #include <vector>
 
@@ -79,18 +81,12 @@ class TrackEstimator {
     // Number of estimated tracks that were input.
     int input_num_estimated_tracks = 0;
 
-    // Number of estimated tracks after trianguation.
-    int final_num_estimated_tracks = 0;
-
     // Number of triangulation attempts made.
     int num_triangulation_attempts = 0;
 
     // TrackId of the newly estimated tracks. This set does not include tracks
     // that were input as estimated.
     std::unordered_set<TrackId> estimated_tracks;
-
-    double ba_setup_time_in_seconds = 0;
-    double ba_total_time_in_seconds = 0;
   };
 
   TrackEstimator(const Options& options, Reconstruction* reconstruction)
@@ -109,7 +105,13 @@ class TrackEstimator {
   const Options options_;
   Reconstruction* reconstruction_;
   std::vector<TrackId> tracks_to_estimate_;
-  std::unordered_set<TrackId> successfully_estimated_tracks_;
+
+  // A mutex lock for setting the summary
+  TrackEstimator::Summary summary_;
+  std::mutex summary_mutex_;
+
+  std::atomic_int num_bad_angles_, num_failed_triangulations_,
+      num_bad_reprojections_;
 };
 
 }  // namespace theia

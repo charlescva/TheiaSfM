@@ -40,6 +40,9 @@
 #include <string>
 
 namespace theia {
+// Aliasing oiio to whatever the correct Open Image IO namesace is.
+// The macro OIIO_NAMESPACE is defined in OpenImageIO/oiioversion.h.
+namespace oiio = OIIO_NAMESPACE;
 
 // A basic wrapper class for handling images. The images are always converted to
 // floating point type with pixel values ranging from 0 to 1.0. The number of
@@ -47,15 +50,24 @@ namespace theia {
 // the caller to choose to appropriate RGB vs grayscale method.
 class FloatImage {
  public:
-  FloatImage() {}
+  FloatImage();
 
   // Read from file.
   explicit FloatImage(const std::string& filename);
   FloatImage(const int width, const int height, const int channels);
 
+  // The image class may also be used as a wrapper around an existing buffer of
+  // image data. The data is assumed to be in row-major order. When constructing
+  // an image as a buffer in this way, the image cannot be resized and will
+  // throw an error if the caller attempts to do so.
+  FloatImage(const int width,
+             const int height,
+             const int channels,
+             float* buffer);
+
   // Copy function. This is a deep copy of the image.
   FloatImage(const FloatImage& image_to_copy);
-  explicit FloatImage(const OpenImageIO::ImageBuf& image);
+  explicit FloatImage(const oiio::ImageBuf& image);
   FloatImage& operator=(const FloatImage& image2);
   ~FloatImage() {}
 
@@ -65,8 +77,8 @@ class FloatImage {
   // wrapper for all algorithms. Getting a reference to the ImageBuf provides
   // efficient access to the image data so that the image processing algorithms
   // or other manipulations may be executed on the pixels.
-  OpenImageIO::ImageBuf& GetOpenImageIOImageBuf();
-  const OpenImageIO::ImageBuf& GetOpenImageIOImageBuf() const;
+  oiio::ImageBuf& GetOpenImageIOImageBuf();
+  const oiio::ImageBuf& GetOpenImageIOImageBuf() const;
 
   // Image information
   int Rows() const;
@@ -139,6 +151,11 @@ class FloatImage {
   // gradient magnitude at each pixel.
   FloatImage ComputeGradient() const;
 
+  // Apply a median filter to the image. Each pixel value is replaced by taking
+  // the median value in a patch_width x patch_width window centered at the
+  // pixel.
+  void MedianFilter(const int patch_width);
+
   // Compute the integral image where pixel (x, y) is equal to the sum of all
   // values in the rectangle from (0, 0) to (x, y) non-inclusive. This means
   // that the first row and column are all zeros, and the returned integral
@@ -148,16 +165,17 @@ class FloatImage {
   // otherwise floating roundoff errors are sure to occur.
   void Integrate(FloatImage* integral) const;
 
-  // Computes a fast approximate gaussian blur of te image.
-  void ApproximateGaussianBlur(const double sigma);
+  // Computes a fast approximate gaussian blur of the image.
+  void ApproximateGaussianBlur(const int kernel_size);
 
   // Resize using a Lanczos 3 filter.
   void Resize(int new_width, int new_height);
+  void Resize(int new_width, int new_height, int num_channels);
   void ResizeRowsCols(int new_rows, int new_cols);
   void Resize(double scale);
 
  protected:
-  OpenImageIO::ImageBuf image_;
+  oiio::ImageBuf image_;
 };
 }  // namespace theia
 

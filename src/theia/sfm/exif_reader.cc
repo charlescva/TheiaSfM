@@ -49,6 +49,9 @@
 #include "theia/sfm/camera_intrinsics_prior.h"
 #include "theia/util/map_util.h"
 
+// Generated file
+#include "camera_sensor_database.h"
+
 namespace theia {
 namespace {
 
@@ -93,14 +96,7 @@ ExifReader::ExifReader() {
 }
 
 void ExifReader::LoadSensorWidthDatabase() {
-  const std::string sensor_width_file =
-      std::string(THEIA_DATA_DIR) + "/camera_sensor_database.txt";
-
-  std::ifstream ifs(sensor_width_file.c_str(), std::ios::in);
-  if (!ifs.is_open()) {
-    LOG(FATAL) << "Cannot read the sensor width file from "
-               << sensor_width_file;
-  }
+  std::stringstream ifs(camera_sensor_database_txt, std::ios::in);
 
   while (!ifs.eof()) {
     // Read in the filename.
@@ -127,8 +123,8 @@ bool ExifReader::ExtractEXIFMetadata(
     CameraIntrinsicsPrior* camera_intrinsics_prior) const {
   CHECK_NOTNULL(camera_intrinsics_prior);
 
-  OpenImageIO::ImageBuf image(image_file);
-  OpenImageIO::ImageSpec image_spec = image.spec();
+  oiio::ImageBuf image(image_file);
+  oiio::ImageSpec image_spec = image.spec();
 
   // Set the image dimensions.
   camera_intrinsics_prior->image_width = image_spec.width;
@@ -154,7 +150,7 @@ bool ExifReader::ExtractEXIFMetadata(
   camera_intrinsics_prior->focal_length.is_set = true;
 
   // Set GPS latitude.
-  const OpenImageIO::ImageIOParameter* latitude =
+  const oiio::ImageIOParameter* latitude =
       image_spec.find_attribute("GPS:Latitude");
   if (latitude != nullptr) {
     camera_intrinsics_prior->latitude.is_set = true;
@@ -173,7 +169,7 @@ bool ExifReader::ExtractEXIFMetadata(
   }
 
   // Set GPS longitude.
-  const OpenImageIO::ImageIOParameter* longitude =
+  const oiio::ImageIOParameter* longitude =
       image_spec.find_attribute("GPS:Longitude");
   if (longitude != nullptr) {
     camera_intrinsics_prior->longitude.is_set = true;
@@ -193,7 +189,7 @@ bool ExifReader::ExtractEXIFMetadata(
 
 
   // Set GSP altitude.
-  const OpenImageIO::ImageIOParameter* altitude =
+  const oiio::ImageIOParameter* altitude =
       image_spec.find_attribute("GPS:Altitude");
   if (altitude != nullptr) {
     camera_intrinsics_prior->altitude.is_set = true;
@@ -205,7 +201,7 @@ bool ExifReader::ExtractEXIFMetadata(
 }
 
 bool ExifReader::SetFocalLengthFromExif(
-    const OpenImageIO::ImageSpec& image_spec,
+    const oiio::ImageSpec& image_spec,
     CameraIntrinsicsPrior* camera_intrinsics_prior) const {
   static const float kMinFocalLength = 1e-2;
 
@@ -268,7 +264,7 @@ bool ExifReader::SetFocalLengthFromExif(
 }
 
 bool ExifReader::SetFocalLengthFromSensorDatabase(
-    const OpenImageIO::ImageSpec& image_spec,
+    const oiio::ImageSpec& image_spec,
     CameraIntrinsicsPrior* camera_intrinsics_prior) const {
   const int max_image_dimension = std::max(image_spec.width, image_spec.height);
   const float exif_focal_length =

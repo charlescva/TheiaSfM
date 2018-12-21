@@ -214,9 +214,10 @@ void TranslationFilteringIteration(
 
   // Get a random vector to project all relative translations on to.
   const Vector3d random_axis =
-      Vector3d(local_rng->RandGaussian(direction_mean[0], direction_variance[0]),
-               local_rng->RandGaussian(direction_mean[1], direction_variance[1]),
-               local_rng->RandGaussian(direction_mean[2], direction_variance[2]))
+      Vector3d(
+          local_rng->RandGaussian(direction_mean[0], direction_variance[0]),
+          local_rng->RandGaussian(direction_mean[1], direction_variance[1]),
+          local_rng->RandGaussian(direction_mean[2], direction_variance[2]))
           .normalized();
 
   // Project all vectors.
@@ -275,18 +276,19 @@ void FilterViewPairsFromRelativeTranslation(
                       &translation_mean,
                       &translation_variance);
 
-  ThreadPool pool(options.num_threads);
+  std::unique_ptr<ThreadPool> pool(new ThreadPool(options.num_threads));
   std::mutex mutex;
   for (int i = 0; i < options.num_iterations; i++) {
-    pool.Add(TranslationFilteringIteration,
-             rotated_translations,
-             translation_mean,
-             translation_variance,
-             options.rng,
-             &mutex,
-             &bad_edge_weight);
+    pool->Add(TranslationFilteringIteration,
+              rotated_translations,
+              translation_mean,
+              translation_variance,
+              options.rng,
+              &mutex,
+              &bad_edge_weight);
   }
-  pool.WaitForTasksToFinish();
+  // Wait for tasks to finish.
+  pool.reset(nullptr);
 
   // Remove all the bad edges.
   const double max_aggregated_projection_tolerance =
